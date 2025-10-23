@@ -1,3 +1,6 @@
+// ==========================================
+// FILE: app/auth/register.tsx
+// ==========================================
 import { useRouter } from 'expo-router';
 import { UserPlus } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -5,95 +8,88 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    nombre: '',
-    edad: '',
-    email: '',
-    telefono: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleRegister = () => {
-    // Validaciones
-    if (formData.password !== formData.confirmPassword) {
-      alert('Las contraseñas no coinciden');
-      return;
-    }
-
-    // Aquí irá Firebase Auth después
-    console.log('Registro:', formData);
-    router.replace('/main/home');
+    // Aquí irá la lógica de registro
+    router.replace('/(tabs)/home');
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.icon}>🏆</Text>
-        <Text style={styles.title}>Crear Cuenta</Text>
-        <Text style={styles.subtitle}>Únete a MatchUp</Text>
+        <View style={styles.header}>
+          <Text style={styles.icon}>🏆</Text>
+          <Text style={styles.title}>MatchUp</Text>
+          <Text style={styles.subtitle}>Crea tu cuenta</Text>
+        </View>
 
-        <TextInput
-          placeholder="Nombre completo"
-          value={formData.nombre}
-          onChangeText={(text) => setFormData({ ...formData, nombre: text })}
-          style={styles.input}
-          placeholderTextColor="#9ca3af"
-        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Nombre completo"
+            value={name}
+            onChangeText={setName}
+            style={styles.input}
+            placeholderTextColor="#9ca3af"
+          />
+          <TextInput
+            placeholder="Edad"
+            value={age}
+            onChangeText={setAge}
+            style={styles.input}
+            placeholderTextColor="#9ca3af"
+            keyboardType="numeric"
+          />
+          <TextInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+            placeholderTextColor="#9ca3af"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            placeholder="Número de teléfono"
+            value={phone}
+            onChangeText={setPhone}
+            style={styles.input}
+            placeholderTextColor="#9ca3af"
+            keyboardType="phone-pad"
+          />
+          <TextInput
+            placeholder="Contraseña"
+            value={password}
+            onChangeText={setPassword}
+            style={styles.input}
+            placeholderTextColor="#9ca3af"
+            secureTextEntry
+          />
+          <TextInput
+            placeholder="Confirmar contraseña"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            style={styles.input}
+            placeholderTextColor="#9ca3af"
+            secureTextEntry
+          />
+        </View>
 
-        <TextInput
-          placeholder="Edad"
-          value={formData.edad}
-          onChangeText={(text) => setFormData({ ...formData, edad: text })}
-          style={styles.input}
-          keyboardType="numeric"
-          placeholderTextColor="#9ca3af"
-        />
-
-        <TextInput
-          placeholder="Email"
-          value={formData.email}
-          onChangeText={(text) => setFormData({ ...formData, email: text })}
-          style={styles.input}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholderTextColor="#9ca3af"
-        />
-
-        <TextInput
-          placeholder="Teléfono"
-          value={formData.telefono}
-          onChangeText={(text) => setFormData({ ...formData, telefono: text })}
-          style={styles.input}
-          keyboardType="phone-pad"
-          placeholderTextColor="#9ca3af"
-        />
-
-        <TextInput
-          placeholder="Contraseña"
-          value={formData.password}
-          onChangeText={(text) => setFormData({ ...formData, password: text })}
-          style={styles.input}
-          secureTextEntry
-          placeholderTextColor="#9ca3af"
-        />
-
-        <TextInput
-          placeholder="Confirmar contraseña"
-          value={formData.confirmPassword}
-          onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-          style={styles.input}
-          secureTextEntry
-          placeholderTextColor="#9ca3af"
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <TouchableOpacity onPress={handleRegister} style={styles.button}>
           <UserPlus size={20} color="white" />
           <Text style={styles.buttonText}>Crear Cuenta</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
+          <Text style={styles.linkText}>
+            ¿Ya tienes cuenta?{' '}
+            <Text style={styles.linkBold}>Inicia sesión</Text>
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -102,19 +98,22 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#09C82C',
-  },
-  contentContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
   },
   card: {
     backgroundColor: 'white',
     borderRadius: 24,
     padding: 32,
+    width: '100%',
+    maxWidth: 400,
+  },
+  header: {
     alignItems: 'center',
+    marginBottom: 32,
   },
   icon: {
     fontSize: 64,
@@ -128,19 +127,20 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: '#6b7280',
+    fontSize: 16,
+  },
+  inputContainer: {
+    gap: 16,
     marginBottom: 24,
   },
   input: {
-    width: '100%',
     padding: 12,
     borderWidth: 2,
     borderColor: '#d1d5db',
     borderRadius: 8,
     fontSize: 16,
-    marginBottom: 16,
   },
   button: {
-    width: '100%',
     backgroundColor: '#09C82C',
     padding: 12,
     borderRadius: 8,
@@ -148,14 +148,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: 16,
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 18,
   },
-  link: {
+  linkText: {
+    textAlign: 'center',
+    marginTop: 24,
+    color: '#6b7280',
+  },
+  linkBold: {
     color: '#09C82C',
     fontWeight: '600',
   },
