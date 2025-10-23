@@ -1,23 +1,25 @@
-// ==========================================
-// FILE: app/(tabs)/_layout.tsx
-// ==========================================
 import { Tabs } from 'expo-router';
-import { Home, MessageCircle, UserCircle } from 'lucide-react-native';
+import { Home, MessageCircle, Trophy, User } from 'lucide-react-native';
 
-export default function TabsLayout() {
+export default function MainLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
         tabBarActiveTintColor: '#09C82C',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
           backgroundColor: 'white',
-          borderTopColor: '#bbf7d0',
-          borderTopWidth: 2,
+          borderTopWidth: 1,
+          borderTopColor: '#e5e7eb',
           height: 60,
           paddingBottom: 8,
+          paddingTop: 8,
         },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -28,9 +30,16 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="partidos"
+        options={{
+          title: 'Partidos',
+          tabBarIcon: ({ color, size }) => <Trophy size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="chat"
         options={{
-          title: 'Chat',
+          title: 'Chats',
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
@@ -38,7 +47,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color, size }) => <UserCircle size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />
     </Tabs>
