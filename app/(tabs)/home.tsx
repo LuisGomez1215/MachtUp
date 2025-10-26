@@ -1,20 +1,22 @@
-// ==========================================
-// FILE: app/(tabs)/home.tsx
-// ==========================================
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Search } from 'lucide-react-native';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { userData } = useAuth();
+
+  // Obtener primer nombre del usuario
+  const firstName = userData?.name.split(' ')[0] || 'Usuario';
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>MatchUp</Text>
-          <Text style={styles.headerSubtitle}>¡Hola, Carlos!</Text>
+          <Text style={styles.headerSubtitle}>¡Hola, {firstName}!</Text>
         </View>
       </View>
 
@@ -141,4 +143,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
   },
-});
+}); 

@@ -2,16 +2,15 @@
 .expo/
 dist/
 web-build/
-
+.env
 # Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
 # OSX
 .DS_Store
-
+env.ts
 # Windows
 Thumbs.db
 

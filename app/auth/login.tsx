@@ -1,24 +1,68 @@
-// ==========================================
-// FILE: app/auth/login.tsx
-// ==========================================
+// app/auth/login.tsx
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LogIn } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { loginUser } from '../../services/authService';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ email: '', password: '' });
 
-  const handleLogin = () => {
-    // Aquí irá la lógica de autenticación
-    router.replace('/(tabs)/home');
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = { email: '', password: '' };
+
+    if (!email.trim()) {
+      newErrors.email = 'El email es requerido';
+      valid = false;
+    } else if (!email.includes('@')) {
+      newErrors.email = 'Email inválido';
+      valid = false;
+    }
+
+    if (!password) {
+      newErrors.password = 'La contraseña es requerida';
+      valid = false;
+    } else if (password.length < 6) {
+      newErrors.password = 'Mínimo 6 caracteres';
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const handleLogin = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await loginUser(email.trim(), password);
+
+      if (result.success) {
+        Alert.alert('¡Bienvenido!', result.message);
+        router.replace('/(tabs)/home');
+      } else {
+        Alert.alert('Error', result.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Ocurrió un error inesperado');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.card}>
+      <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.icon}>🏆</Text>
           <Text style={styles.title}>MatchUp</Text>
@@ -26,31 +70,59 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            placeholder="Contraseña"
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-          />
+          <View>
+            <TextInput
+              placeholder="Email"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                setErrors({ ...errors, email: '' });
+              }}
+              style={[styles.input, errors.email ? styles.inputError : null]}
+              placeholderTextColor="rgba(255, 255, 255, 0.6)"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
+            />
+            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          </View>
+
+          <View>
+            <TextInput
+              placeholder="Contraseña"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setErrors({ ...errors, password: '' });
+              }}
+              style={[styles.input, errors.password ? styles.inputError : null]}
+              placeholderTextColor="rgba(255, 255, 255, 0.6)"
+              secureTextEntry
+              editable={!loading}
+            />
+            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+          </View>
         </View>
 
-        <TouchableOpacity onPress={handleLogin} style={styles.button}>
-          <LogIn size={20} color="white" />
-          <Text style={styles.buttonText}>Iniciar Sesión</Text>
+        <TouchableOpacity 
+          onPress={handleLogin} 
+          style={[styles.button, loading && styles.buttonDisabled]}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#22c55e" />
+          ) : (
+            <>
+              <LogIn size={20} color="#22c55e" />
+              <Text style={styles.buttonText}>Iniciar Sesión</Text>
+            </>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push('/auth/register')}>
+        <TouchableOpacity 
+          onPress={() => router.push('/auth/register')}
+          disabled={loading}
+        >
           <Text style={styles.linkText}>
             ¿No tienes cuenta?{' '}
             <Text style={styles.linkBold}>Regístrate aquí</Text>
@@ -64,17 +136,14 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#09C82C',
+    backgroundColor: '#22c55e',
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 24,
   },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 32,
+  content: {
     width: '100%',
     maxWidth: 400,
+    alignSelf: 'center',
   },
   header: {
     alignItems: 'center',
@@ -87,11 +156,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#03440F',
+    color: 'white',
     marginBottom: 8,
   },
   subtitle: {
-    color: '#6b7280',
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 16,
   },
   inputContainer: {
@@ -99,33 +168,47 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   input: {
-    padding: 12,
+    padding: 14,
     borderWidth: 2,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 12,
     fontSize: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: 'white',
+  },
+  inputError: {
+    borderColor: '#ef4444',
+  },
+  errorText: {
+    color: '#fecaca',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
   button: {
-    backgroundColor: '#09C82C',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: 'white',
+    padding: 14,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   buttonText: {
-    color: 'white',
+    color: '#22c55e',
     fontWeight: 'bold',
     fontSize: 18,
   },
   linkText: {
     textAlign: 'center',
     marginTop: 24,
-    color: '#6b7280',
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   linkBold: {
-    color: '#09C82C',
+    color: 'white',
     fontWeight: '600',
   },
 });

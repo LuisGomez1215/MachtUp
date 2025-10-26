@@ -1,21 +1,71 @@
-import { Calendar, Mail, Phone, Trophy, User } from 'lucide-react-native';
+// app/(tabs)/profile.tsx
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { User, Mail, Phone, Trophy, Calendar, LogOut } from 'lucide-react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function ProfileScreen() {
-  const userData = {
-    name: 'Carlos Rodríguez',
-    age: 25,
-    email: 'carlos@matchup.com',
-    phone: '+56 9 1234 5678',
-    matches: [
-      { sport: 'Fútbol 11v11', date: '15 Oct 2025', result: 'Victoria' },
-      { sport: 'Basket 5v5', date: '12 Oct 2025', result: 'Derrota' },
-      { sport: 'Fútbol 7v7', date: '10 Oct 2025', result: 'Victoria' },
-      { sport: 'Voleibol 6v6', date: '08 Oct 2025', result: 'Victoria' },
-      { sport: 'Fútbol 5v5', date: '05 Oct 2025', result: 'Empate' }
-    ]
+  const { userData, loading, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = React.useState(false);
+  const [showConfirm, setShowConfirm] = React.useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    
+    try {
+      await logout();
+    } catch (error: any) {
+      alert(`Error al cerrar sesión: ${error?.message || 'Error desconocido'}`);
+    } finally {
+      setLoggingOut(false);
+    }
   };
+
+  // Mostrar loading mientras carga
+  if (loading || !userData) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#09C82C" />
+        <Text style={styles.loadingText}>Cargando perfil...</Text>
+      </View>
+    );
+  }
+
+  // Modal de confirmación
+  if (showConfirm) {
+    return (
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Cerrar Sesión</Text>
+          <Text style={styles.modalMessage}>¿Estás seguro que deseas cerrar sesión?</Text>
+          
+          <View style={styles.modalButtons}>
+            <TouchableOpacity 
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => setShowConfirm(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.modalButton, styles.confirmButton]}
+              onPress={() => {
+                setShowConfirm(false);
+                handleLogout();
+              }}
+              disabled={loggingOut}
+            >
+              {loggingOut ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text style={styles.confirmButtonText}>Cerrar Sesión</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -25,9 +75,26 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.name}>{userData.name}</Text>
         <Text style={styles.age}>{userData.age} años</Text>
+        
+        {/* Botón de cerrar sesión */}
+        <TouchableOpacity 
+          onPress={() => setShowConfirm(true)}
+          style={styles.logoutButton}
+          disabled={loggingOut}
+        >
+          {loggingOut ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : (
+            <>
+              <LogOut size={18} color="white" />
+              <Text style={styles.logoutText}>Cerrar Sesión</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView}>
+        {/* Card de información de contacto */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <User size={20} color="#09C82C" />
@@ -45,33 +112,42 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Card de historial de partidos */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Trophy size={20} color="#facc15" />
             <Text style={styles.cardTitle}>Historial de partidos</Text>
           </View>
-          {userData.matches.map((match, index) => (
-            <View key={index} style={styles.matchItem}>
-              <View style={styles.matchInfo}>
-                <Calendar size={18} color="#09C82C" />
-                <View style={styles.matchDetails}>
-                  <Text style={styles.matchSport}>{match.sport}</Text>
-                  <Text style={styles.matchDate}>{match.date}</Text>
+          {userData.matches && userData.matches.length > 0 ? (
+            userData.matches.map((match: any, index: number) => (
+              <View key={index} style={styles.matchItem}>
+                <View style={styles.matchInfo}>
+                  <Calendar size={18} color="#09C82C" />
+                  <View style={styles.matchDetails}>
+                    <Text style={styles.matchSport}>{match.sport}</Text>
+                    <Text style={styles.matchDate}>{match.date}</Text>
+                  </View>
+                </View>
+                <View style={[
+                  styles.matchBadge,
+                  match.result === 'Victoria' && styles.matchBadgeWin,
+                  match.result === 'Derrota' && styles.matchBadgeLose
+                ]}>
+                  <Text style={[
+                    styles.matchBadgeText,
+                    match.result === 'Victoria' && styles.matchBadgeTextWin,
+                    match.result === 'Derrota' && styles.matchBadgeTextLose
+                  ]}>{match.result}</Text>
                 </View>
               </View>
-              <View style={[
-                styles.matchBadge,
-                match.result === 'Victoria' && styles.matchBadgeWin,
-                match.result === 'Derrota' && styles.matchBadgeLose
-              ]}>
-                <Text style={[
-                  styles.matchBadgeText,
-                  match.result === 'Victoria' && styles.matchBadgeTextWin,
-                  match.result === 'Derrota' && styles.matchBadgeTextLose
-                ]}>{match.result}</Text>
-              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateIcon}>🏆</Text>
+              <Text style={styles.emptyStateText}>Aún no has jugado ningún partido</Text>
+              <Text style={styles.emptyStateSubtext}>¡Busca tu primera partida!</Text>
             </View>
-          ))}
+          )}
         </View>
       </ScrollView>
     </View>
@@ -82,6 +158,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0fdf4',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+  },
+  loadingText: {
+    marginTop: 16,
+    color: '#6b7280',
+    fontSize: 16,
   },
   header: {
     backgroundColor: '#09C82C',
@@ -110,6 +197,23 @@ const styles = StyleSheet.create({
   age: {
     color: '#dcfce7',
     marginTop: 4,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginTop: 16,
+    minWidth: 150,
+    justifyContent: 'center',
+  },
+  logoutText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
   },
   scrollView: {
     flex: 1,
@@ -195,5 +299,73 @@ const styles = StyleSheet.create({
   },
   matchBadgeTextLose: {
     color: '#991b1b',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyStateIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+  },
+  // Estilos del modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#03440F',
+    marginBottom: 12,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginBottom: 24,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#e5e7eb',
+  },
+  cancelButtonText: {
+    color: '#374151',
+    fontWeight: '600',
+  },
+  confirmButton: {
+    backgroundColor: '#ef4444',
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });

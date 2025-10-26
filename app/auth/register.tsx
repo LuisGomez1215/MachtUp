@@ -1,166 +1,249 @@
-// ==========================================
-// FILE: app/auth/register.tsx
-// ==========================================
+// app/auth/register.tsx
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { UserPlus } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { registerUser } from '../../services/authService';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    age: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+  });
 
-  const handleRegister = () => {
-    // Aquí irá la lógica de registro
-    router.replace('/(tabs)/home');
+  const handleRegister = async () => {
+    setLoading(true);
+    try {
+      const result = await registerUser(formData);
+      
+      if (result.success) {
+        router.replace('/(tabs)/home');
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      alert('Error al registrar usuario');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.header}>
-          <Text style={styles.icon}>🏆</Text>
-          <Text style={styles.title}>MatchUp</Text>
-          <Text style={styles.subtitle}>Crea tu cuenta</Text>
-        </View>
+    <View style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.icon}>🏆</Text>
+              <Text style={styles.title}>Crear Cuenta</Text>
+              <Text style={styles.subtitle}>Únete a MatchUp</Text>
+            </View>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Nombre completo"
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-          />
-          <TextInput
-            placeholder="Edad"
-            value={age}
-            onChangeText={setAge}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-            keyboardType="numeric"
-          />
-          <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            placeholder="Número de teléfono"
-            value={phone}
-            onChangeText={setPhone}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-            keyboardType="phone-pad"
-          />
-          <TextInput
-            placeholder="Contraseña"
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-          />
-          <TextInput
-            placeholder="Confirmar contraseña"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={styles.input}
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-          />
-        </View>
+            {/* Formulario */}
+            <View style={styles.inputContainer}>
+              {/* Nombre */}
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre completo"
+                placeholderTextColor="rgba(255, 255, 255, 0.97)"
+                value={formData.name}
+                onChangeText={(text) => setFormData({ ...formData, name: text })}
+                autoCapitalize="words"
+                editable={!loading}
+              />
 
-        <TouchableOpacity onPress={handleRegister} style={styles.button}>
-          <UserPlus size={20} color="white" />
-          <Text style={styles.buttonText}>Crear Cuenta</Text>
-        </TouchableOpacity>
+              {/* Edad y Teléfono en la misma fila */}
+              <View style={styles.row}>
+                <TextInput
+                  style={[styles.input, styles.ageInput]}
+                  placeholder="Edad"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={formData.age}
+                  onChangeText={(text) => setFormData({ ...formData, age: text })}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                  editable={!loading}
+                />
 
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.linkText}>
-            ¿Ya tienes cuenta?{' '}
-            <Text style={styles.linkBold}>Inicia sesión</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+                <TextInput
+                  style={[styles.input, styles.phoneInput]}
+                  placeholder="Teléfono"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={formData.phone}
+                  onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                  keyboardType="phone-pad"
+                  editable={!loading}
+                />
+              </View>
+
+              {/* Email */}
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                value={formData.email}
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!loading}
+              />
+
+              {/* Contraseña */}
+              <TextInput
+                style={styles.input}
+                placeholder="Contraseña (mín. 6 caracteres)"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                value={formData.password}
+                onChangeText={(text) => setFormData({ ...formData, password: text })}
+                secureTextEntry
+                autoCapitalize="none"
+                editable={!loading}
+              />
+
+              {/* Confirmar Contraseña */}
+              <TextInput
+                style={styles.input}
+                placeholder="Confirmar contraseña"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                value={formData.confirmPassword}
+                onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+                secureTextEntry
+                autoCapitalize="none"
+                editable={!loading}
+              />
+            </View>
+
+            {/* Botón de Registro */}
+            <TouchableOpacity 
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#22c55e" />
+              ) : (
+                <>
+                  <UserPlus size={20} color="#22c55e" />
+                  <Text style={styles.buttonText}>Crear Cuenta</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Link a Login */}
+            <TouchableOpacity 
+              onPress={() => router.push('/auth/login')}
+              disabled={loading}
+            >
+              <Text style={styles.linkText}>
+                ¿Ya tienes cuenta?{' '}
+                <Text style={styles.linkBold}>Inicia sesión aquí</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: '#22c55e',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#09C82C',
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 24,
   },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 32,
+  content: {
     width: '100%',
     maxWidth: 400,
+    alignSelf: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   icon: {
-    fontSize: 64,
-    marginBottom: 16,
+    fontSize: 48,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#03440F',
-    marginBottom: 8,
+    color: 'white',
+    marginBottom: 4,
   },
   subtitle: {
-    color: '#6b7280',
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 16,
   },
   inputContainer: {
-    gap: 16,
-    marginBottom: 24,
+    gap: 12,
+    marginBottom: 20,
   },
   input: {
-    padding: 12,
+    padding: 14,
     borderWidth: 2,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 12,
     fontSize: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.48)',
+    color: 'white',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  ageInput: {
+    width: 80,
+    textAlign: 'center',
+  },
+  phoneInput: {
+    flex: 1,
   },
   button: {
-    backgroundColor: '#09C82C',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: 'white',
+    padding: 14,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   buttonText: {
-    color: 'white',
+    color: '#22c55e',
     fontWeight: 'bold',
     fontSize: 18,
   },
   linkText: {
     textAlign: 'center',
-    marginTop: 24,
-    color: '#6b7280',
+    marginTop: 20,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   linkBold: {
-    color: '#09C82C',
+    color: 'white',
     fontWeight: '600',
   },
 });
