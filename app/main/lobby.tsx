@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Plus } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -13,6 +13,23 @@ export default function LobbyScreen() {
     { id: 3, name: 'Pedro Sánchez', status: 'online' },
     { id: 4, name: 'Ana López', status: 'online' },
   ]);
+
+  const handleSearchMatch = () => {
+    console.log('🎮 Navegando a searching con:', {
+      sport: sportName,
+      mode: gameMode,
+      icon: sportIcon,
+    });
+
+    router.push({
+      pathname: '/main/searching',
+      params: {
+        sport: sportName as string,    // ✅ Usar sportName
+        mode: gameMode as string,      // ✅ Usar gameMode
+        icon: sportIcon as string,     // ✅ Usar sportIcon
+      }
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -42,39 +59,15 @@ export default function LobbyScreen() {
                 <Text style={styles.avatarText}>👤</Text>
               </View>
               <View>
-                <Text style={styles.playerName}>Carlos Rodríguez (Tú)</Text>
+                <Text style={styles.playerName}>Tú</Text>
                 <Text style={styles.playerStatus}>Listo para jugar</Text>
               </View>
             </View>
           </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Invitar amigos</Text>
-          {friends.map(friend => (
-            <View key={friend.id} style={styles.friendCard}>
-              <View style={styles.playerInfo}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>👤</Text>
-                </View>
-                <View>
-                  <Text style={styles.playerName}>{friend.name}</Text>
-                  <Text style={styles.playerStatus}>
-                    {friend.status === 'online' ? '🟢 En línea' : '⚫ Desconectado'}
-                  </Text>
-                </View>
-              </View>
-              {friend.status === 'online' && (
-                <TouchableOpacity style={styles.inviteButton}>
-                  <Plus size={18} color="white" />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-        </View>
-
         <TouchableOpacity
-          onPress={() => router.push('/main/searching')}
+          onPress={handleSearchMatch}
           style={styles.searchButton}
         >
           <Text style={styles.searchButtonText}>Buscar Partida</Text>
